@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================
+         project.cost.breakdown  —  Standalone Form View
+         (opened when user clicks a line from the list)
+    ============================================================ -->
+    <record id="view_cost_breakdown_form" model="ir.ui.view">
+        <field name="name">project.cost.breakdown.form</field>
+        <field name="model">project.cost.breakdown</field>
+        <field name="arch" type="xml">
+            <form string="Cost Breakdown Line">
+                <sheet>
+                    <group>
+                        <group string="Line Details">
+                            <field name="estimate_id" readonly="state != 'draft'"/>
+                            <field name="name"     readonly="state != 'draft'"/>
+                        </group>
+
+                        <group string="Pricing">
+                            <field name="quantity"   readonly="state != 'draft'"/>
+                            <field
+                                name="unit_price"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="state != 'draft'"
+                            />
+                            <field
+                                name="subtotal"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"
+                            />
+                            <field name="currency_id" invisible="1"/>
+                            <field name="state" invisible="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem
+        id="menu_cost_estimate_root"
+        name="Cost Estimates"
+        parent="project.menu_main_pm"
+        sequence="30"
+        groups="project.group_project_user"
+    />
+
+    <menuitem
+        id="menu_cost_estimate_all"
+        name="All Estimates"
+        parent="menu_cost_estimate_root"
+        action="action_cost_estimate"
+        sequence="10"
+        groups="project.group_project_user"
+    />
+
+</odoo>

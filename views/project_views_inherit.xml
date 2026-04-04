@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================
+         project.project  —  Form View Inheritance
+         Smart button: calls action_open_cost_estimates() on project.project.
+         Uses type="object" which is correct and reliable in Odoo 17.
+    ============================================================ -->
+    <record id="view_project_form_inherit_cost_estimate" model="ir.ui.view">
+        <field name="name">project.project.form.inherit.cost.estimate</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+                <button
+                    name="action_open_cost_estimates"
+                    type="object"
+                    class="oe_stat_button"
+                    icon="fa-calculator"
+                    groups="project.group_project_user"
+                >
+                    <field
+                        name="cost_estimate_count"
+                        string="Cost Estimates"
+                        widget="statinfo"
+                    />
+                </button>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ============================================================
+         project.project  —  Kanban View Inheritance
+         Odoo 17 project kanban: inject extra fields then add a block
+         inside the existing card template using <xpath>.
+
+         Note: Odoo 17 project kanban XML ID: project.view_project_kanban
+         The card body xpath targets the footer area of the kanban card.
+    ============================================================ -->
+<record id="view_project_kanban_inherit_cost_estimate" model="ir.ui.view">
+    <field name="name">project.project.kanban.inherit.cost.estimate</field>
+    <field name="model">project.project</field>
+    <field name="inherit_id" ref="project.view_project_kanban"/>
+    <field name="arch" type="xml">
+
+        <!-- make fields available -->
+        <xpath expr="//kanban" position="inside">
+            <field name="cost_estimate_count"/>
+            <field name="latest_estimate_total"/>
+            <field name="latest_estimate_state"/>
+        </xpath>
+
+        <!-- inject inside kanban template -->
+        <xpath expr="//templates/t[@t-name='kanban-box']//div[contains(@class, 'o_kanban_record_bottom')]" position="before">
+            <t t-if="record.cost_estimate_count.raw_value">
+                <div class="border-top mt-2 pt-2 small text-muted d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fa fa-calculator me-1"/>
+                        <t t-out="record.cost_estimate_count.raw_value"/> estimate(s)
+                    </span>
+                    <span>
+                        <strong t-out="record.latest_estimate_total.value"/>
+                        <span
+                            t-att-class="'badge rounded-pill ' + (
+                                record.latest_estimate_state.raw_value == 'draft' and 'text-bg-secondary' or
+                                record.latest_estimate_state.raw_value == 'submitted' and 'text-bg-warning' or
+                                record.latest_estimate_state.raw_value == 'approved' and 'text-bg-success' or
+                                'text-bg-danger'
+                            )"
+                            t-out="record.latest_estimate_state.value"
+                        />
+                    </span>
+                </div>
+            </t>
+        </xpath>
+
+    </field>
+</record>
+</odoo>

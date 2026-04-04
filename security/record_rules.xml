@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- ============================================================
+             project.cost.estimate  —  Record Rules
+        ============================================================ -->
+
+        <!--
+            Project Users: can only see estimates they created themselves.
+            This rule applies to the base project_user group.
+            Project Admins and Approvers have their own broader rules below.
+        -->
+        <record id="rule_cost_estimate_own_user" model="ir.rule">
+            <field name="name">Cost Estimate: Users see own records</field>
+            <field name="model_id" ref="model_project_cost_estimate"/>
+            <field name="domain_force">[('created_by', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('project.group_project_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!--
+            Project Admins (Managers): can see all estimates for projects
+            where they are a member or manager.
+            We use a broad domain here; fine-grained project membership
+            filtering can be added via project_id.member_ids if required.
+        -->
+        <record id="rule_cost_estimate_manager" model="ir.rule">
+            <field name="name">Cost Estimate: Admins see all managed project estimates</field>
+            <field name="model_id" ref="model_project_cost_estimate"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('project.group_project_manager'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <!--
+            Approvers: can only see estimates that have been submitted
+            (state = submitted). They cannot modify anything.
+        -->
+        <record id="rule_cost_estimate_approver" model="ir.rule">
+            <field name="name">Cost Estimate: Approvers see submitted estimates only</field>
+            <field name="model_id" ref="model_project_cost_estimate"/>
+            <field name="domain_force">[('state', 'in', ['submitted', 'approved', 'rejected'])]</field>
+            <field name="groups" eval="[(4, ref('project_cost_estimate.group_cost_approver'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- ============================================================
+             project.cost.breakdown  —  Record Rules
+             Mirror the estimate rules so breakdown lines follow the same
+             visibility as their parent estimate.
+        ============================================================ -->
+
+        <record id="rule_cost_breakdown_own_user" model="ir.rule">
+            <field name="name">Cost Breakdown: Users see own estimate lines</field>
+            <field name="model_id" ref="model_project_cost_breakdown"/>
+            <field name="domain_force">[('estimate_id.created_by', '=', user.id)]</field>
+            <field name="groups" eval="[(4, ref('project.group_project_user'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <record id="rule_cost_breakdown_manager" model="ir.rule">
+            <field name="name">Cost Breakdown: Admins see all lines</field>
+            <field name="model_id" ref="model_project_cost_breakdown"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('project.group_project_manager'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
+
+        <record id="rule_cost_breakdown_approver" model="ir.rule">
+            <field name="name">Cost Breakdown: Approvers see submitted estimate lines</field>
+            <field name="model_id" ref="model_project_cost_breakdown"/>
+            <field name="domain_force">[('estimate_id.state', 'in', ['submitted', 'approved', 'rejected'])]</field>
+            <field name="groups" eval="[(4, ref('project_cost_estimate.group_cost_approver'))]"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+    </data>
+</odoo>

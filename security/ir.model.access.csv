@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_cost_estimate_user,project.cost.estimate user,model_project_cost_estimate,project.group_project_user,1,1,1,0
+access_cost_estimate_manager,project.cost.estimate manager,model_project_cost_estimate,project.group_project_manager,1,1,1,1
+access_cost_estimate_approver,project.cost.estimate approver,model_project_cost_estimate,project_cost_estimate.group_cost_approver,1,0,0,0
+access_cost_breakdown_user,project.cost.breakdown user,model_project_cost_breakdown,project.group_project_user,1,1,1,0
+access_cost_breakdown_manager,project.cost.breakdown manager,model_project_cost_breakdown,project.group_project_manager,1,1,1,1
+access_cost_breakdown_approver,project.cost.breakdown approver,model_project_cost_breakdown,project_cost_estimate.group_cost_approver,1,0,0,0

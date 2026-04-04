@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================
+         project.cost.breakdown  —  Inline List Sub-view
+         Must be declared as its own ir.ui.view record so the Odoo 17
+         view validator can correctly resolve field names against
+         project.cost.breakdown (not the parent model).
+    ============================================================ -->
+    <record id="view_cost_breakdown_inline_tree" model="ir.ui.view">
+        <field name="name">project.cost.breakdown.tree.inline</field>
+        <field name="model">project.cost.breakdown</field>
+        <field name="arch" type="xml">
+            <tree
+                string="Cost Lines"
+                editable="bottom"
+                decoration-muted="subtotal == 0"
+            >
+                <field name="sequence" widget="handle"/>
+                <field name="name" placeholder="Line description..."/>
+<!--                <field name="category"/>-->
+                <field name="quantity"/>
+<!--                <field name="unit"/>-->
+                <field
+                    name="unit_price"
+                    widget="monetary"
+                    options="{'currency_field': 'currency_id'}"
+                />
+                <field
+                    name="subtotal"
+                    widget="monetary"
+                    options="{'currency_field': 'currency_id'}"
+                    readonly="1"
+                />
+                <field name="currency_id" column_invisible="1"/>
+                <field name="estimate_id" column_invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ============================================================
+         project.cost.estimate  —  Form View
+    ============================================================ -->
+    <record id="view_cost_estimate_form" model="ir.ui.view">
+        <field name="name">project.cost.estimate.form</field>
+        <field name="model">project.cost.estimate</field>
+        <field name="arch" type="xml">
+            <form string="Cost Estimate">
+
+                <header>
+                    <button
+                        name="action_submit"
+                        string="Submit for Approval"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'draft'"
+                        groups="project.group_project_manager"
+                    />
+                    <button
+                        name="action_approve"
+                        string="Approve"
+                        type="object"
+                        class="btn-success"
+                        invisible="state != 'submitted'"
+                        groups="project_cost_estimate.group_cost_approver"
+                    />
+                    <button
+                        name="action_reject"
+                        string="Reject"
+                        type="object"
+                        class="btn-danger"
+                        invisible="state != 'submitted'"
+                        groups="project_cost_estimate.group_cost_approver"
+                    />
+                    <button
+                        name="action_reset_to_draft"
+                        string="Reset to Draft"
+                        type="object"
+                        invisible="state != 'rejected'"
+                        groups="project.group_project_manager"
+                    />
+                    <field
+                        name="state"
+                        widget="statusbar"
+                        statusbar_visible="draft,submitted,approved"
+                    />
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field
+                                name="name"
+                                placeholder="e.g. Cost Estimate for Website Project"
+                                readonly="state != 'draft'"
+                            />
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="General Information">
+                            <field
+                                name="project_id"
+                                readonly="state != 'draft'"
+                                options="{'no_create': True}"
+                            />
+                            <field name="currency_id" readonly="state != 'draft'"/>
+                            <field name="created_by" readonly="1"/>
+                        </group>
+                        <group string="Summary">
+                            <field
+                                name="estimated_total_cost"
+                                widget="monetary"
+                                options="{'currency_field': 'currency_id'}"
+                                readonly="1"
+                            />
+                            <field
+                                name="submission_date"
+                                readonly="1"
+                                invisible="not submission_date"
+                            />
+                            <field
+                                name="approval_date"
+                                readonly="1"
+                                invisible="not approval_date"
+                            />
+                            <field
+                                name="approved_by"
+                                readonly="1"
+                                invisible="not approved_by"
+                            />
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Cost Breakdown" name="breakdown">
+                            <!--
+                                Reference the separately declared sub-view via
+                                views="[(view_id, 'tree')]" so the validator
+                                scopes field checks to project.cost.breakdown.
+                            -->
+                            <field
+                                name="breakdown_ids"
+                                readonly="state != 'draft'"
+                                context="{'default_estimate_id': id}"
+                            />
+
+                            <group class="oe_subtotal_footer oe_right">
+                                <field
+                                    name="estimated_total_cost"
+                                    string="Total Estimated Cost"
+                                    widget="monetary"
+                                    options="{'currency_field': 'currency_id'}"
+                                    readonly="1"
+                                    class="oe_subtotal_footer_separator"
+                                />
+                                <field name="currency_id" invisible="1"/>
+                            </group>
+                        </page>
+
+                        <page string="Notes" name="notes">
+                            <field
+                                name="notes"
+                                placeholder="Add internal notes, assumptions, or scope definitions here..."
+                                readonly="state != 'draft'"
+                            />
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============================================================
+         project.cost.estimate  —  List View
+    ============================================================ -->
+    <record id="view_cost_estimate_tree" model="ir.ui.view">
+        <field name="name">project.cost.estimate.tree</field>
+        <field name="model">project.cost.estimate</field>
+        <field name="arch" type="xml">
+            <tree
+                string="Cost Estimates"
+                decoration-info="state == 'draft'"
+                decoration-warning="state == 'submitted'"
+                decoration-success="state == 'approved'"
+                decoration-danger="state == 'rejected'"
+            >
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="created_by"/>
+                <field
+                    name="estimated_total_cost"
+                    widget="monetary"
+                    options="{'currency_field': 'currency_id'}"
+                />
+                <field name="currency_id" column_invisible="1"/>
+                <field name="submission_date"/>
+                <field name="approval_date"/>
+                <field
+                    name="state"
+                    widget="badge"
+                    decoration-info="state == 'draft'"
+                    decoration-warning="state == 'submitted'"
+                    decoration-success="state == 'approved'"
+                    decoration-danger="state == 'rejected'"
+                />
+            </tree>
+        </field>
+    </record>
+
+    <!-- ============================================================
+         project.cost.estimate  —  Kanban View
+    ============================================================ -->
+<record id="view_cost_estimate_kanban" model="ir.ui.view">
+    <field name="name">project.cost.estimate.kanban</field>
+    <field name="model">project.cost.estimate</field>
+    <field name="arch" type="xml">
+        <kanban default_group_by="state">
+            <field name="name"/>
+            <field name="project_id"/>
+            <field name="state"/>
+            <field name="estimated_total_cost"/>
+            <field name="currency_id"/>
+            <field name="created_by"/>
+            <field name="submission_date"/>
+
+            <templates>
+                <t t-name="kanban-box">
+                    <div class="oe_kanban_global_click o_kanban_record">
+                        <div class="o_kanban_record_body p-2">
+
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <strong class="fs-5">
+                                    <field name="name"/>
+                                </strong>
+                                <field name="state" widget="badge"
+                                       decoration-info="state == 'draft'"
+                                       decoration-warning="state == 'submitted'"
+                                       decoration-success="state == 'approved'"
+                                       decoration-danger="state == 'rejected'"/>
+                            </div>
+
+                            <div class="text-muted mb-1">
+                                <i class="fa fa-folder-open me-1"/>
+                                <strong>Project: </strong>
+                                <field name="project_id"/>
+                            </div>
+
+                            <div class="mb-1">
+                                <i class="fa fa-money me-1"/>
+                                <strong>Total: </strong>
+                                <field name="estimated_total_cost"
+                                       widget="monetary"
+                                       options="{'currency_field': 'currency_id'}"/>
+                            </div>
+
+                            <div class="mb-1 text-muted">
+                                <i class="fa fa-user me-1"/>
+                                <strong>Created By: </strong>
+                                <field name="created_by"/>
+                            </div>
+
+                            <div class="text-muted" invisible="not submission_date">
+                                <i class="fa fa-calendar me-1"/>
+                                <strong>Submitted: </strong>
+                                <field name="submission_date"/>
+                            </div>
+
+                        </div>
+                    </div>
+                </t>
+            </templates>
+        </kanban>
+    </field>
+</record>
+    <!-- ============================================================
+         project.cost.estimate  —  Search View
+    ============================================================ -->
+    <record id="view_cost_estimate_search" model="ir.ui.view">
+        <field name="name">project.cost.estimate.search</field>
+        <field name="model">project.cost.estimate</field>
+        <field name="arch" type="xml">
+            <search string="Search Cost Estimates">
+                <field name="name" string="Estimate Name"/>
+                <field name="project_id" string="Project"/>
+                <field name="created_by" string="Created By"/>
+
+                <filter name="filter_draft"     string="Draft"     domain="[('state','=','draft')]"/>
+                <filter name="filter_submitted"  string="Submitted" domain="[('state','=','submitted')]"/>
+                <filter name="filter_approved"   string="Approved"  domain="[('state','=','approved')]"/>
+                <filter name="filter_rejected"   string="Rejected"  domain="[('state','=','rejected')]"/>
+                <separator/>
+                <filter
+                    name="filter_my_estimates"
+                    string="My Estimates"
+                    domain="[('created_by','=',uid)]"
+                />
+
+                <group expand="0" string="Group By">
+                    <filter name="group_project"    string="Project"    context="{'group_by': 'project_id'}"/>
+                    <filter name="group_state"      string="Status"     context="{'group_by': 'state'}"/>
+                    <filter name="group_created_by" string="Created By" context="{'group_by': 'created_by'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============================================================
+         Actions
+    ============================================================ -->
+    <record id="action_cost_estimate" model="ir.actions.act_window">
+        <field name="name">Cost Estimates</field>
+        <field name="res_model">project.cost.estimate</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first cost estimate!
+            </p>
+            <p>
+                Link a cost estimate to a project to track budgets
+                and get them approved before work begins.
+            </p>
+        </field>
+    </record>
+
+</odoo>
